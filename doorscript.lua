@@ -1,24 +1,36 @@
 local door = script.Parent
-local tweenService = game:GetService("TweenService")
+local TweenService = game:GetService("TweenService")
 
-local isOpen = false
+local opened = false
+local debounce = false
 
-local closedPosition = door.Position
-local openPosition = door.Position + Vector3.new(0, 0, -5)
+local closedCFrame = door.CFrame
+local openCFrame = door.CFrame * CFrame.new(0, 0, -5)
 
-local tweenInfo = TweenInfo.new(1)
-local openTween = tweenService:Create(door, tweenInfo, {Position = openPosition})
-local closeTween = tweenService:Create(door, tweenInfo, {Position = closedPosition})
+local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local openTween = TweenService:Create(door, tweenInfo, {CFrame = openCFrame})
+local closeTween = TweenService:Create(door, tweenInfo, {CFrame = closedCFrame})
 
 door.Touched:Connect(function(hit)
-    local humanoid = hit.Parent:FindFirstChild("Humanoid")
+	if debounce or opened then return end
 
-    if humanoid and not isOpen then
-        isOpen = true
-        openTween:Play()
+	local character = hit.Parent
+	if not character then return end
 
-        task.wait(3)
-        closeTween:Play()
-        isOpen = false
-    end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		debounce = true
+		opened = true
+		
+		openTween:Play()
+		openTween.Completed:Wait()
+
+		task.wait(3)
+
+		closeTween:Play()
+		closeTween.Completed:Wait()
+
+		opened = false
+		debounce = false
+	end
 end)
