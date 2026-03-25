@@ -1,29 +1,34 @@
 local trigger = script.Parent
-local door = trigger.Parent:FindFirstChild("d1") -- change this if your door part has a different name
-local TweenService = game:GetService("TweenService")
+local doorModel = trigger.Parent
+local hinge = doorModel:FindFirstChildWhichIsA("HingeConstraint", true)
 
 local isOpen = false
+local busy = false
 
-local closedCFrame = door.CFrame
-local openCFrame = closedCFrame * CFrame.new(-4, 0, 0) -- slides sideways relative to door
-
-local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-local openTween = TweenService:Create(door, tweenInfo, {CFrame = openCFrame})
-local closeTween = TweenService:Create(door, tweenInfo, {CFrame = closedCFrame})
+if not hinge then
+	warn("No HingeConstraint found!")
+	return
+end
 
 trigger.Touched:Connect(function(hit)
-	local humanoid = hit.Parent:FindFirstChildOfClass("Humanoid")
-	if humanoid and not isOpen then
+	if busy then return end
+	
+	local character = hit.Parent
+	if not character then return end
+	
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+	
+	busy = true
+	
+	if not isOpen then
 		isOpen = true
-
-		openTween:Play()
-		openTween.Completed:Wait()
-
-		task.wait(3)
-
-		closeTween:Play()
-		closeTween.Completed:Wait()
-
+		hinge.TargetAngle = 90
+	else
 		isOpen = false
+		hinge.TargetAngle = 0
 	end
+	
+	task.wait(1)
+	busy = false
 end)
