@@ -1,25 +1,42 @@
 local trigger = script.Parent
-local door = trigger.Parent:FindFirstChild("d1") -- change to your real door part name
+local model = trigger.Parent
 local TweenService = game:GetService("TweenService")
 
-if not door then
-	warn("Door part not found!")
+local leftDoor = model:FindFirstChild("d1")
+local rightDoor = model:FindFirstChild("d2")
+
+if not leftDoor or not rightDoor then
+	warn("Couldn't find d1 and d2!")
 	return
 end
 
 local isOpen = false
 local busy = false
 
-local hingeOffset = CFrame.new(-door.Size.X/2, 0, 0) -- hinge on left side
-local closedCFrame = door.CFrame
-local openCFrame = closedCFrame * hingeOffset * CFrame.Angles(0, math.rad(35), 0) * hingeOffset:Inverse()
+local OPEN_ANGLE = math.rad(35)
+
+-- Save original positions
+local leftClosed = leftDoor.CFrame
+local rightClosed = rightDoor.CFrame
+
+-- Pivot from opposite outer edges
+local leftHingeOffset = CFrame.new(-leftDoor.Size.X / 2, 0, 0)
+local rightHingeOffset = CFrame.new(rightDoor.Size.X / 2, 0, 0)
+
+-- Make both doors swing away from the center
+local leftOpen = leftClosed * leftHingeOffset * CFrame.Angles(0, -OPEN_ANGLE, 0) * leftHingeOffset:Inverse()
+local rightOpen = rightClosed * rightHingeOffset * CFrame.Angles(0, OPEN_ANGLE, 0) * rightHingeOffset:Inverse()
 
 local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-local openTween = TweenService:Create(door, tweenInfo, {CFrame = openCFrame})
-local closeTween = TweenService:Create(door, tweenInfo, {CFrame = closedCFrame})
+
+local leftOpenTween = TweenService:Create(leftDoor, tweenInfo, {CFrame = leftOpen})
+local leftCloseTween = TweenService:Create(leftDoor, tweenInfo, {CFrame = leftClosed})
+
+local rightOpenTween = TweenService:Create(rightDoor, tweenInfo, {CFrame = rightOpen})
+local rightCloseTween = TweenService:Create(rightDoor, tweenInfo, {CFrame = rightClosed})
 
 trigger.Touched:Connect(function(hit)
-	if busy then return end
+	if busy or isOpen then return end
 
 	local character = hit.Parent
 	if not character then return end
@@ -28,20 +45,17 @@ trigger.Touched:Connect(function(hit)
 	if not humanoid then return end
 
 	busy = true
+	isOpen = true
 
-	if not isOpen then
-		isOpen = true
-		openTween:Play()
-		openTween.Completed:Wait()
+	leftOpenTween:Play()
+	rightOpenTween:Play()
 
-		task.wait(2)
+	task.wait(2.5)
 
-		closeTween:Play()
-		closeTween.Completed:Wait()
+	leftCloseTween:Play()
+	rightCloseTween:Play()
 
-		isOpen = false
-	end
-
-	task.wait(0.2)
+	task.wait(1)
+	isOpen = false
 	busy = false
 end)
