@@ -1,20 +1,16 @@
 local Lighting = game:GetService("Lighting")
 
--- SETTINGS
-local CYCLE_LENGTH = 120 -- How many real-life seconds a full day lasts
-local START_TIME = 8     -- What time the game starts (8 AM)
+-- CONFIGURATION
+local minutesPerSecond = 0.1 -- How many game minutes pass every real second
+local startTime = 8          -- The game starts at 8:00 AM
 
-Lighting.ClockTime = START_TIME
+Lighting.ClockTime = startTime
 
--- The logic: 24 hours / length of cycle = how much to move per second
-local waitTime = 1/30 -- Update 30 times a second for smoothness
-local increment = (24 / CYCLE_LENGTH) * waitTime
-
+-- THE LOOP
 while true do
-	Lighting.ClockTime = Lighting.ClockTime + increment
+	-- Increment the time
+	Lighting.ClockTime = Lighting.ClockTime + (minutesPerSecond / 60)
 	
-	-- Optional: Print time to console to test (remove when done)
-	-- print("Current Time: " .. Lighting.TimeOfDay)
-	
-	task.wait(waitTime)
+	-- Wait a tiny bit before updating again (makes it smooth)
+	task.wait(1/30) 
 end
